@@ -53,6 +53,13 @@ class TelegramController extends Controller
             ]);
 
             switch ($wishType) {
+                case '/менюгероя':
+                    $telegram->sendMessage([
+                        'chat_id' => $chatId,
+                        'parse_mode' => 'HTML',
+                        'text'=> 'Ты можешь делать три вещи, Ковбой:<br>- Совершать подвиги(/статьгероем);<br>- Спать в багажнике(/геройспит)<br>- Поднять зад и начать действовать!!1(/геройпроснулся)<br>И помни: "Большая сила - большая ответственность..."'
+                    ]);
+                    break;
                 case '/статьгероем':
                     if (empty(Hero::where('chat_id', $chatId)->first())) {
                         $hero = new Hero;
