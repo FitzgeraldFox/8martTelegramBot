@@ -3,7 +3,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Hero;
 use App\Models\Wish;
-use Exception;
 use Telegram\Bot\Api;
 
 class TelegramController extends Controller
@@ -133,27 +132,20 @@ class TelegramController extends Controller
     
     public static function executeWish($telegram, $requestArray, $realWishText, $chatId, $wish)
     {
-        try {
-            $heroes = Hero::where('active', true)->get()->toArray();
-            $rand_hero_number = mt_rand(0, count($heroes) - 1);
-            $telegram->sendMessage([
-                'chat_id' => $heroes[$rand_hero_number]['chat_id'],
-                'text' => "{$requestArray["message"]["from"]["first_name"]} {$requestArray["message"]["from"]["last_name"]} хочет, чтобы ты принёс ей $realWishText. Это твой шанс, парень!",
-            ]);
+        $heroes = Hero::where('active', true)->get()->toArray();
+        $rand_hero_number = mt_rand(0, count($heroes) - 1);
+        $telegram->sendMessage([
+            'chat_id' => $heroes[$rand_hero_number]['chat_id'],
+            'text' => "{$requestArray["message"]["from"]["first_name"]} {$requestArray["message"]["from"]["last_name"]} хочет, чтобы ты принёс ей $realWishText. Это твой шанс, парень!",
+        ]);
 
-            $wish->hero_id = $heroes[$rand_hero_number]['id'];
-            $wish->save();
+        $wish->hero_id = $heroes[$rand_hero_number]['id'];
+        $wish->save();
 
-            $telegram->sendPhoto([
-                'chat_id' => $chatId,
-                'caption' => "Ваш герой уже спешит к Вам!",
-                'photo' => 'https://im0-tub-ru.yandex.net/i?id=26e44b90edeb66d197257a772c907b97&n=13'
-            ]);
-        } catch (Exception $e) {
-            $telegram->sendMessage([
-                'chat_id' => $chatId,
-                'text' => $e->getMessage(),
-            ]);
-        }
+        $telegram->sendPhoto([
+            'chat_id' => $chatId,
+            'caption' => "Ваш герой уже спешит к Вам!",
+            'photo' => 'https://im0-tub-ru.yandex.net/i?id=26e44b90edeb66d197257a772c907b97&n=13'
+        ]);
     }
 }
