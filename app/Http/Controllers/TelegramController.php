@@ -114,13 +114,13 @@ class TelegramController extends Controller
                             die;
                         }
                     } else {
-                        $wish = new Wish;
-                        $wish->user_id = $requestArray['message']['from']['id'];
-                        $wish->wish_type = $wishType;
-                        $wish->save();
+                        $userWish = new Wish;
+                        $userWish->user_id = $requestArray['message']['from']['id'];
+                        $userWish->wish_type = $wishType;
+                        $userWish->save();
                     }
 
-                    self::executeWish($telegram, $requestArray, $realWishText, $chatId, $wish);
+                    self::executeWish($telegram, $requestArray, $realWishText, $chatId, $userWish);
             }
         } else {
             $telegram->sendPhoto([
@@ -141,7 +141,7 @@ class TelegramController extends Controller
                 'text' => "{$requestArray["message"]["from"]["first_name"]} {$requestArray["message"]["from"]["last_name"]} хочет, чтобы ты принёс ей $realWishText. Это твой шанс, парень!",
             ]);
 
-            $wish['hero_id'] = $heroes[$rand_hero_number]['id'];
+            $wish->hero_id = $heroes[$rand_hero_number]['id'];
             $wish->save();
 
             $telegram->sendPhoto([
