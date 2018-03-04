@@ -14,9 +14,9 @@ class TelegramController extends Controller
         $requestArray = $telegram->getWebhookUpdates();
 
         $wishes = [
-            ['text' => 'Принесите мне Волшебный чай Алладина!. И печенюшек повкусней :)', 'realWishText' => 'Принесите мне Волшебный чай Алладина!. И печенюшек повкусней :)', 'sweet' => true],
-            ['text' => 'Желаю Магический кофе Царицы Клеопатры с привкусом тайн и пирамид', 'realWishText' => 'Магический кофе и полцарства в придачу!', 'sweet' => true],
-            ['text' => 'Хочу Обнимашки!)))', 'realWishText' => 'Обнимашки!)))', 'sweet' => false]
+            ['text' => 'Принесите мне Волшебный чай Алладина!. И печенюшек повкусней :)', 'realWishText' => 'Волшебный чай Алладина!. И печенюшек повкусней :)'],
+            ['text' => 'Желаю Магический кофе Царицы Клеопатры с привкусом тайн и пирамид', 'realWishText' => 'Магический кофе Царицы Клеопатры с привкусом тайн и пирамид'],
+            ['text' => 'Хочу Обнимашки!)))', 'realWishText' => 'Обнимашки!)))']
         ];
 
         $fun_pics = [
@@ -37,14 +37,12 @@ class TelegramController extends Controller
             return;
         }
 
-//        if (time() > 1520406000 && time() < 1520424000) {
-            $isWishSweet = true;
+        if ((int)time() < 1520424000) {
             $realWishText = '';
             $keyboard = [];
             foreach ($wishes as $wish) {
                 $keyboard[] = [$wish['text']];
                 if ($wishType == $wish['text']) {
-                    $isWishSweet = $wish['sweet'];
                     $realWishText = $wish['realWishText'];
                 }
             }
@@ -108,7 +106,7 @@ class TelegramController extends Controller
                     ])->first();
 
                     if (!empty($userWish)) {
-                        if ($wishType != $wishes[3]['text']) {
+                        if ($wishType != $wishes[2]['text']) {
                             $telegram->sendPhoto([
                                 'chat_id' => $chatId,
                                 'photo' => $fun_pics[mt_rand(0, count($fun_pics))],
@@ -124,15 +122,13 @@ class TelegramController extends Controller
 
                     self::executeWish($telegram, $requestArray, $realWishText, $chatId);
             }
-
-
-//        } else {
-//            $telegram->sendPhoto([
-//                'chat_id' => $chatId,
-//                'caption' => 'Даже супергероям нужен отдых :)',
-//                'photo' => 'https://thefancy-media-ec2.thefancy.com/original/20130720/410793053037532055_66521055a244.jpg'
-//            ]);
-//        }
+        } else {
+            $telegram->sendPhoto([
+                'chat_id' => $chatId,
+                'caption' => 'Даже супергероям нужен отдых :)',
+                'photo' => 'https://thefancy-media-ec2.thefancy.com/original/20130720/410793053037532055_66521055a244.jpg'
+            ]);
+        }
     }
     
     public static function executeWish($telegram, $requestArray, $realWishText, $chatId)
