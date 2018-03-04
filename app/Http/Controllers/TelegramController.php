@@ -120,7 +120,7 @@ class TelegramController extends Controller
                         $wish->save();
                     }
 
-                    self::executeWish($telegram, $requestArray, $realWishText, $chatId);
+                    self::executeWish($telegram, $requestArray, $realWishText, $chatId, $wish);
             }
         } else {
             $telegram->sendPhoto([
@@ -131,7 +131,7 @@ class TelegramController extends Controller
         }
     }
     
-    public static function executeWish($telegram, $requestArray, $realWishText, $chatId)
+    public static function executeWish($telegram, $requestArray, $realWishText, $chatId, $wish)
     {
         try {
             $heroes = Hero::where('active', true)->get()->toArray();
@@ -140,6 +140,9 @@ class TelegramController extends Controller
                 'chat_id' => $heroes[$rand_hero_number]['chat_id'],
                 'text' => "{$requestArray["message"]["from"]["first_name"]} {$requestArray["message"]["from"]["last_name"]} хочет, чтобы ты принёс ей $realWishText. Это твой шанс, парень!",
             ]);
+
+            $wish['hero_id'] = $heroes[$rand_hero_number]['id'];
+            $wish->save();
 
             $telegram->sendPhoto([
                 'chat_id' => $chatId,
