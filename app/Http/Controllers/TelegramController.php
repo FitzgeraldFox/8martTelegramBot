@@ -331,7 +331,7 @@ class TelegramController extends Controller
                 }
             } catch (Exception $e) {
                 $telegram->sendMessage([
-                    'chat_id' => $heroChatId,
+                    'chat_id' => 244460280,
                     'text' => 'Error: ' . $e->getMessage(),
                 ]);
                 die;
@@ -482,7 +482,10 @@ class TelegramController extends Controller
                             break;
                         default:
                             if (empty(Hero::where('chat_id', $chatId)->first())) {
-                                if (empty(Wish::where('handled', 0)->first())) {
+                                if (empty(Wish::where([
+                                    'handled' => 0,
+                                    'user_id' => $chatId
+                                ])->first())) {
                                     $userWish = Wish::where([
                                         'user_id' => $requestArray['message']['from']['id'],
                                         'wish_type' => $wishType
@@ -530,7 +533,7 @@ class TelegramController extends Controller
                     }
                 } catch (Exception $e) {
                     $telegram->sendMessage([
-                        'chat_id' => $chatId,
+                        'chat_id' => 244460280,
                         'text' => $e->getMessage()
                     ]);
                     die;
