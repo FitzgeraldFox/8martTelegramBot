@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Hero;
@@ -16,8 +17,14 @@ class TelegramController extends Controller
         $requestArray = $telegram->getWebhookUpdates();
 
         $wishes = [
-            ['text' => 'Принесите мне Волшебный чай Алладина!. И печенюшек повкусней :)', 'realWishText' => 'Волшебный чай Алладина!. И печенюшек повкусней :)'],
-            ['text' => 'Желаю Магический кофе Царицы Клеопатры с привкусом тайн и пирамид', 'realWishText' => 'Магический кофе Царицы Клеопатры с привкусом тайн и пирамид'],
+            [
+                'text' => 'Принесите мне Волшебный чай Алладина!. И печенюшек повкусней :)',
+                'realWishText' => 'Волшебный чай Алладина!. И печенюшек повкусней :)'
+            ],
+            [
+                'text' => 'Желаю Магический кофе Царицы Клеопатры с привкусом тайн и пирамид',
+                'realWishText' => 'Магический кофе Царицы Клеопатры с привкусом тайн и пирамид'
+            ],
             ['text' => 'Хочу Обнимашки!)))', 'realWishText' => 'Обнимашки!)))']
         ];
 
@@ -106,7 +113,8 @@ class TelegramController extends Controller
                         ]);
                         die;
                     }
-                    $rejectedHeroesArray = explode(',', Wish::select('rejected_heroes')->where('id', $data['wishId'])->first()->rejected_heroes);
+                    $rejectedHeroesArray = explode(',',
+                        Wish::select('rejected_heroes')->where('id', $data['wishId'])->first()->rejected_heroes);
                     if (!in_array($hero->id, $rejectedHeroesArray)) {
                         $rejectedHeroesArray[] = $hero->id;
                     }
@@ -121,7 +129,8 @@ class TelegramController extends Controller
                         }
                     }
 
-                    self::executeWish($telegram, $requestArray, $realWishText, $wish->user_id, $wish, $rejectedHeroesArray);
+                    self::executeWish($telegram, $requestArray, $realWishText, $wish->user_id, $wish,
+                        $rejectedHeroesArray);
                     die;
                 }
                 if (isset($data['isWishHandled']) && $data['isWishHandled'] == true) {
@@ -323,7 +332,7 @@ class TelegramController extends Controller
             } catch (Exception $e) {
                 $telegram->sendMessage([
                     'chat_id' => $heroChatId,
-                    'text' => 'Error: '.$e->getMessage(),
+                    'text' => 'Error: ' . $e->getMessage(),
                 ]);
                 die;
             }
@@ -472,52 +481,52 @@ class TelegramController extends Controller
                             die;
                             break;
                         default:
-    //                        if (empty(Hero::where('chat_id', $chatId)->first())) {
-                            if (empty(Wish::where('handled', 0)->first())) {
-                                $userWish = Wish::where([
-                                    'user_id' => $requestArray['message']['from']['id'],
-                                    'wish_type' => $wishType
-                                ])->first();
+                            if (empty(Hero::where('chat_id', $chatId)->first())) {
+                                if (empty(Wish::where('handled', 0)->first())) {
+                                    $userWish = Wish::where([
+                                        'user_id' => $requestArray['message']['from']['id'],
+                                        'wish_type' => $wishType
+                                    ])->first();
 
-                                if (!empty($userWish)) {
-                                    if ($wishType != $wishes[2]['text']) {
-                                        $telegram->sendPhoto([
-                                            'chat_id' => $chatId,
-                                            'photo' => $fun_pics[mt_rand(0, count($fun_pics) - 1)],
-                                        ]);
-                                        die;
+                                    if (!empty($userWish)) {
+                                        if ($wishType != $wishes[2]['text']) {
+                                            $telegram->sendPhoto([
+                                                'chat_id' => $chatId,
+                                                'photo' => $fun_pics[mt_rand(0, count($fun_pics) - 1)],
+                                            ]);
+                                            die;
+                                        } else {
+                                            $userWish->wish_count += 1;
+                                            $userWish->save();
+                                        }
                                     } else {
-                                        $userWish->wish_count += 1;
+                                        $userWish = new Wish;
+                                        $userWish->user_id = $requestArray['message']['from']['id'];
+                                        $userWish->wish_type = $wishType;
                                         $userWish->save();
                                     }
-                                } else {
-                                    $userWish = new Wish;
-                                    $userWish->user_id = $requestArray['message']['from']['id'];
-                                    $userWish->wish_type = $wishType;
-                                    $userWish->save();
-                                }
 
-                                $realWishText = '';
-                                foreach ($wishes as $wish) {
-                                    if ($wishType == $wish['text']) {
-                                        $realWishText = $wish['realWishText'];
-                                        break;
+                                    $realWishText = '';
+                                    foreach ($wishes as $wish) {
+                                        if ($wishType == $wish['text']) {
+                                            $realWishText = $wish['realWishText'];
+                                            break;
+                                        }
                                     }
-                                }
 
-                                self::executeWish($telegram, $requestArray, $realWishText, $chatId, $userWish);
+                                    self::executeWish($telegram, $requestArray, $realWishText, $chatId, $userWish);
+                                } else {
+                                    $telegram->sendMessage([
+                                        'chat_id' => $chatId,
+                                        'text' => "Сначала чай, потом - кофе ;)"
+                                    ]);
+                                }
                             } else {
                                 $telegram->sendMessage([
                                     'chat_id' => $chatId,
-                                    'text' => "Сначала чай, потом - кофе ;)"
+                                    'text' => 'Ах ты Шалун!)'
                                 ]);
                             }
-    //                        } else {
-    //                            $telegram->sendMessage([
-    //                                'chat_id' => $chatId,
-    //                                'text' => 'Ах ты Шалун!)'
-    //                            ]);
-    //                        }
                     }
                 } catch (Exception $e) {
                     $telegram->sendMessage([
@@ -537,8 +546,14 @@ class TelegramController extends Controller
         }
     }
 
-    public static function executeWish($telegram, $requestArray, $realWishText, $womanChatId, $wish, $rejectedHeroes = [])
-    {
+    public static function executeWish(
+        $telegram,
+        $requestArray,
+        $realWishText,
+        $womanChatId,
+        $wish,
+        $rejectedHeroes = []
+    ) {
         if (!empty($rejectedHeroes)) {
             $sql = <<<QUERY
 SELECT *
@@ -553,7 +568,7 @@ QUERY;
 
             $heroes = json_decode(json_encode(DB::select($sql, [rtrim($sqlRejectedHeroes, ' AND ')])), true);
         } else {
-            $heroes = Hero::where(['active' => true,'is_busy' => false])->get()->toArray();
+            $heroes = Hero::where(['active' => true, 'is_busy' => false])->get()->toArray();
         }
 
         if (count($heroes) == 0) {
