@@ -6,4 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 class Wish extends Model
 {
     public $timestamps = false;
+
+    public function type()
+    {
+        $this->hasOne(WishType::class);
+    }
 }

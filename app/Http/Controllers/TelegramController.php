@@ -2,17 +2,28 @@
 
 namespace App\Http\Controllers;
 
+use App\Commands\Wishes\HeroChoiceCommand;
 use App\Models\Hero;
 use App\Models\Wish;
+use App\Utils\CallbackUtils;
 use DateTime;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Telegram;
 use Telegram\Bot\Api;
 
 class TelegramController extends Controller
 {
     public function getWebhookUpdates()
     {
+        $update = Telegram::commandsHandler(true);
+
+        if (!empty($update['callback_query'])) {
+            CallbackUtils::handleCallback($update);
+        }
+
+        return 'ok';
+
         $telegram = new Api(env('TELEGRAM_BOT_TOKEN'));
         $requestArray = $telegram->getWebhookUpdates();
 
