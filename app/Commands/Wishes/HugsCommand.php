@@ -29,10 +29,7 @@ class HugsCommand extends Command
             'wish_type_id' => WishType::WISH_HUGS_ID
         ])->first();
 
-        if (!empty($userWish)) {
-            $userWish->wish_count += 1;
-            $userWish->save();
-        } else {
+        if (empty($userWish)) {
             $userWish = new Wish;
             $userWish->chat_id = $updates['message']['from']['id'];
             $userWish->wish_type_id = WishType::WISH_HUGS_ID;

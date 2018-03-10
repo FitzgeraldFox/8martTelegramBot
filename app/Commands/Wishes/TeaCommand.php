@@ -36,9 +36,6 @@ class TeaCommand extends Command
                 ]);
                 die;
             }
-            $userWish->wish_count += 1;
-            $userWish->save();
-            die;
         } else {
             $userWish = new Wish;
             $userWish->chat_id = $updates['message']['from']['id'];

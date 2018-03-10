@@ -239,10 +239,18 @@ class CallbackUtils
                 $wish = Wish::find($data['wishId']);
 
                 if (!empty($wish) && $wish->handled != true) {
-                    $wish->delete();
                     $hero = Hero::find($wish->hero_id);
                     $hero->is_busy = false;
                     $hero->save();
+
+                    if ($wish->wish_count > 1) {
+                        $wish->wish_count -= 1;
+                        $wish->handled = true;
+                        $wish->rejected_heroes = '';
+                        $wish->save();
+                    } else {
+                        $wish->delete();
+                    }
 
                     if (!empty($data['herChoice'])) {
                         $telegram->sendPhoto([

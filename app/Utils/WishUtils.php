@@ -40,18 +40,20 @@ QUERY;
                     'text' => 'Прости, но на данный момент все герои либо заняты, либо не могут прийти к тебе :(',
                 ]);
 
-                if ($wish->wish_type_id == WishType::WISH_HUGS_ID) {
-                    if ($wish->wish_count > 1) {
-                        $wish->wish_count -= 1;
-                        $wish->save();
-                    } else {
-                        $wish->delete();
-                    }
+                if ($wish->wish_count > 1) {
+                    $wish->wish_count -= 1;
+                    $wish->handled = true;
+                    $wish->rejected_heroes = '';
+                    $wish->save();
                 } else {
                     $wish->delete();
                 }
                 die;
             }
+
+            $wish->wish_count += 1;
+            $wish->handled = 0;
+            $wish->save();
 
             $rand_hero_number = mt_rand(0, count($heroes) - 1);
 
@@ -129,15 +131,6 @@ QUERY;
                 'text' => "Пожалуйста, подтвердите исполнение предыдущего желания или откажитесь от него"
             ]);
             die;
-        }
-    }
-
-    public static function getHeroName($chatId, $requestArray)
-    {
-        $hero = Hero::where('chat_id', $chatId)->first();
-        if (!empty($hero) && empty($hero->name)) {
-            $hero->name = $requestArray['message']['chat']['first_name'] . ' ' . $requestArray['message']['chat']['last_name'];
-            $hero->save();
         }
     }
 }

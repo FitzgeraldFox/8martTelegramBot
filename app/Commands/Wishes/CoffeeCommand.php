@@ -31,14 +31,11 @@ class CoffeeCommand extends Command
 
         if (!empty($userWish)) {
             if ($userWish->wish_count >= WishType::select('wish_count')->where('id', WishType::WISH_COFFEE_ID)->first()->wish_count) {
-                $this->replyWithMessage([
+                $this->replyWithPhoto([
                     'photo' => WishUtils::getFunPic(),
                 ]);
                 die;
             }
-            $userWish->wish_count += 1;
-            $userWish->save();
-            die;
         } else {
             $userWish = new Wish;
             $userWish->chat_id = $updates['message']['from']['id'];
