@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Commands\Wishes;
 
 use App\Models\Hero;
@@ -18,24 +19,12 @@ class HugsCommand extends Command
 
     public function handle($arguments)
     {
-        $updates = $this->getTelegram()->getWebhookUpdates();
-
-        $chatId = $updates['message']['chat']['id'];
-
-        WishUtils::validateWish($chatId);
-
-        $userWish = Wish::where([
-            'chat_id' => $updates['message']['from']['id'],
-            'wish_type_id' => WishType::WISH_HUGS_ID
-        ])->first();
-
-        if (empty($userWish)) {
-            $userWish = new Wish;
-            $userWish->chat_id = $updates['message']['from']['id'];
-            $userWish->wish_type_id = WishType::WISH_HUGS_ID;
-            $userWish->save();
+        try {
+            $updates = $this->getTelegram()->getWebhookUpdates();
+            $wish = WishUtils::validateWish($updates['message']['chat']['id'], WishType::WISH_HUGS_ID);
+            WishUtils::executeWish($updates, $wish);
+        } catch (Exception $e) {
+            Log::error("Error: {$e->getMessage()} (update: " . json_encode($update) . "; wish: " . json_encode($wish) . "; heroes: )");
         }
-
-        WishUtils::executeWish($updates, $chatId, $userWish);
     }
 }

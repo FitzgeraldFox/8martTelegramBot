@@ -3,6 +3,7 @@ namespace App\Commands;
 
 use App\Models\WishType;
 use Exception;
+use Illuminate\Support\Facades\Log;
 use Telegram;
 use Telegram\Bot\Commands\Command;
 
@@ -20,17 +21,28 @@ class StartCommand extends Command
         try {
             $updates = $this->getTelegram()->getWebhookUpdates();
             $wishTypes = WishType::get();
-            $keyboard = [[['text' => "/tea"]], [['text' => "/coffee"]], [['text' => "/hugs"]]];
+
+            $keyboard = [];
+            $commandDescription = '';
+            foreach ($wishTypes as $wishType) {
+                $commandDescription .= "{$wishType->command}: {$wishType->description}\n";
+                $keyboard[] = [$wishType->command . ' - ' . $wishType->wish_text];
+            }
+
+            $reply_markup = Telegram::replyKeyboardMarkup([
+                'keyboard' => $keyboard,
+                'resize_keyboard' => true,
+                'one_time_keyboard' => false
+            ]);
+
+            $startText = "Привет, {$updates['message']['from']['first_name']} {$updates['message']['from']['last_name']}! Этот супергеройский бот создан, чтобы сделать тебя немного счастливее и подарить тебе море положительных эмоций!)))\n $commandDescription\n Чего пожелаешь?)";
+
             $this->replyWithMessage([
-                'text' => "Привет, {$updates['message']['from']['first_name']} {$updates['message']['from']['last_name']}! Этот супергеройский бот создан, чтобы сделать тебя немного счастливее и подарить тебе море положительных эмоций!)))\n Доступны три желания: принести чай, кофе или обнимашки :) Чай и кофе можно пожелать один раз каждый. Обнимашки можно желать, сколько душе угодно :) \n/tea: {$wishTypes[0]['wish_text']};\n/coffee: {$wishTypes[1]['wish_text']};\n/hugs: {$wishTypes[2]['wish_text']}.\n Чего пожелаешь?)",
-                'reply_markup' => Telegram::replyKeyboardMarkup([
-                    'keyboard' => $keyboard,
-                    'resize_keyboard' => true,
-                    'one_time_keyboard' => false
-                ])
+                'text' => $startText,
+                'reply_markup' => $reply_markup
             ]);
         } catch (Exception $e) {
-            $this->replyWithMessage(['text' => $e->getMessage()]);
+            Log::error(self::class . " Error: {$e->getMessage()}");
         }
     }
 }

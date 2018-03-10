@@ -13,6 +13,6 @@ class WishType extends Model
 
     public function wishes()
     {
-        $this->belongsToMany(Wish::class);
+        return $this->belongsToMany('App\Models\Wish');
     }
 }
