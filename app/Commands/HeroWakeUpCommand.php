@@ -11,7 +11,7 @@ class HeroWakeUpCommand extends Command
      */
     protected $name = "wake_up";
 
-    protected $description = "Если не можешь совершать подвиги или отлучился";
+    protected $description = "Если ты вернулся и снова в строю!";
 
     public function handle($arguments)
     {

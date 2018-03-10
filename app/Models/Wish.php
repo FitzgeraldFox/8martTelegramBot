@@ -9,6 +9,6 @@ class Wish extends Model
 
     public function type()
     {
-        $this->hasOne(WishType::class);
+        return $this->hasOne('App\Models\WishType');
     }
 }
