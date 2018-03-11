@@ -20,7 +20,7 @@ class TeaCommand extends Command
     public function handle($arguments)
     {
         $updates = $this->getTelegram()->getWebhookUpdates();
-        $wish = WishUtils::validateWish($updates['message']['chat']['id'], WishType::WISH_TEA_ID);
-        WishUtils::executeWish($updates, $wish);
+        $wish = WishUtils::validateWish($updates['message']['chat']['id'], WishType::WISH_TEA_ID, $updates);
+        WishUtils::executeWish($wish);
     }
 }
