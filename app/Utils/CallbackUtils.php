@@ -8,7 +8,7 @@ use App\Models\Wish;
 use App\Models\WishType;
 use DateTime;
 use Exception;
-use Illuminate\Support\Facades\Log;
+use Telegram;
 use Telegram\Bot\Api;
 
 class CallbackUtils
@@ -31,6 +31,14 @@ class CallbackUtils
                 $telegram->sendMessage([
                     'chat_id' => $update['callback_query']['message']['chat']['id'],
                     'text' => 'Не повторяется такое никогда...'
+                ]);
+                die;
+            }
+
+            if (empty($hero)) {
+                $telegram->sendMessage([
+                    'chat_id' => $update['callback_query']['message']['chat']['id'],
+                    'text' => 'Герой не найден'
                 ]);
                 die;
             }
@@ -78,20 +86,12 @@ class CallbackUtils
                     'caption' => "А ты молодец :) Будешь стараться - получишь +1 в карму :)",
                     'photo' => 'hero.jpg'
                 ]);
-
                 die;
             }
 
             if (isset($data['answer']) && $data['answer'] == false) {
-                $rejectedHeroesArray = explode(',', $wish->rejected_heroes);
-                if (!in_array($hero->id, $rejectedHeroesArray)) {
-                    $rejectedHeroesArray[] = $hero->id;
-                }
-
-                $wish->rejected_heroes = implode(',', $rejectedHeroesArray);
-                $wish->save();
-
-                WishUtils::executeWish($update, $wish, $rejectedHeroesArray);
+                $rejectedHeroesArray = WishUtils::updateRejectedHeroes($wish, $hero);
+                WishUtils::executeWish($wish, $rejectedHeroesArray);
                 die;
             }
 
@@ -100,6 +100,7 @@ class CallbackUtils
                 $wish->save();
 
                 $hero->is_busy = false;
+                $hero->proposed_wish_id = null;
                 $hero->karma += 1;
                 $hero->save();
 
@@ -120,7 +121,7 @@ class CallbackUtils
             if (isset($data['isWishHandled']) && $data['isWishHandled'] == false) {
                 $hero_get_time = new DateTime($wish->hero_get_time);
                 $interval = $hero_get_time->diff(new DateTime());
-                if ($interval->format('%i') < 10) {
+                if ($interval->format('%s') < 1) {
                     $reply_markup = json_encode([
                         'inline_keyboard' => [
                             [
@@ -135,7 +136,6 @@ class CallbackUtils
                                     'text' => 'Отклонить желание',
                                     'callback_data' => json_encode([
                                         'isWishActive' => false,
-                                        'herChoice' => true,
                                         'wishId' => $wish->id
                                     ])
                                 ]
@@ -183,8 +183,13 @@ class CallbackUtils
 
             if (isset($data['isWishActive']) && $data['isWishActive'] == true) {
                 $hero->is_busy = false;
+                $hero->proposed_wish_id = null;
                 $hero->karma -= 1;
                 $hero->save();
+
+                $wish->hero_id = null;
+                $wish->expired_at = null;
+                $wish->save();
 
                 $telegram->sendPhoto([
                     'chat_id' => $hero->chat_id,
@@ -198,29 +203,22 @@ class CallbackUtils
                     'caption' => "Сейчас мы найдём тебе другого героя...\n А пока полюбуйся на мимимишных котиков :3 Мрррр..."
                 ]);
 
-                WishUtils::executeWish($update, $wish, [$hero->id]);
+                WishUtils::executeWish($wish, [$hero->id]);
                 die;
             }
 
             if (isset($data['isWishActive']) && $data['isWishActive'] == false) {
                 $hero->is_busy = false;
+                $hero->proposed_wish_id = null;
                 $hero->save();
 
                 $wish->delete();
 
-                if (!empty($data['herChoice'])) {
-                    $telegram->sendPhoto([
-                        'chat_id' => $hero->chat_id,
-                        'photo' => 'http://memesmix.net/media/created/zr9vya.jpg',
-                        'caption' => 'Она сама отменила желание. Почему?'
-                    ]);
-                } else {
-                    $telegram->sendPhoto([
-                        'chat_id' => $hero->chat_id,
-                        'photo' => 'https://s00.yaplakal.com/pics/pics_original/1/9/6/10327691.jpg',
-                        'caption' => 'Эх,ты! А она так ждала своего героя!)'
-                    ]);
-                }
+                $telegram->sendPhoto([
+                    'chat_id' => $hero->chat_id,
+                    'photo' => 'http://memesmix.net/media/created/zr9vya.jpg',
+                    'caption' => 'Она сама отменила желание. Почему?'
+                ]);
 
                 $telegram->sendPhoto([
                     'chat_id' => $wish->chat_id,
@@ -239,7 +237,10 @@ class CallbackUtils
                 die;
             }
         } catch (Exception $e) {
-            Log::error(self::class . " handleCallback Error: {$e->getMessage()} (arguments: " . json_encode(func_get_args()) . ")");
+            Telegram::sendMessage([
+                'chat_id' => env('DEVELOPER_CHAT_ID'),
+                'text' => self::class . " handleCallback Error: {$e->getMessage()} (arguments: " . json_encode(func_get_args()) . ")"
+            ]);
         }
     }
 }

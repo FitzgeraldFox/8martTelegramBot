@@ -19,7 +19,7 @@ class CoffeeCommand extends Command
     public function handle($arguments)
     {
         $updates = $this->getTelegram()->getWebhookUpdates();
-        $wish = WishUtils::validateWish($updates['message']['chat']['id'], WishType::WISH_COFFEE_ID);
-        WishUtils::executeWish($updates, $wish);
+        $wish = WishUtils::validateWish($updates['message']['chat']['id'], WishType::WISH_COFFEE_ID, $updates);
+        WishUtils::executeWish($wish);
     }
 }
