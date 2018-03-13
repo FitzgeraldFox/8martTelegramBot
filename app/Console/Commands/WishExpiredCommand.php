@@ -9,9 +9,9 @@ use Exception;
 use Illuminate\Console\Command;
 use Telegram;
 
-class WishExpiredAtCheckCommand extends Command
+class WishExpiredCommand extends Command
 {
-    protected $signature = 'wish:expired_at_check';
+    protected $signature = 'wish:expired_at';
 
     protected $description = 'Проверка на то, истёк ли срок действия желания. Если желание имеет expired_at и не имеет героя, то значит, что герою отправилось приглашение совершить подвиг, но он его не принял. В этом случае ище другого героя. Если hero_id != null, тогда герой профакапился, и мы спрашиваем, актуально ли ещё желание. Если да, то выбираем другого героя, если нет - отменяем желание';
 
